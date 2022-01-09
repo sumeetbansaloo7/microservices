@@ -1,0 +1,79 @@
+version: '3.7'
+
+services:
+  user_service:
+    build: ./user_service
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    volumes:
+      - ./user_service/:/app/
+    ports:
+      - 8001:8000
+    environment:
+      # - DATABASE_URI=postgresql://postgres:noccmpbiki@userdb:5432/userdb
+      - DATABASE_HOSTNAME=user_db
+      - DATABASE_PORT=5432
+      - DATABASE_PASSWORD=noccmpbiki
+      - DATABASE_NAME=userdb
+      - DATABASE_USERNAME=postgres
+
+  content_service:
+    build: ./content_service
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    volumes:
+      - ./content_service/:/app/
+    ports:
+      - 8002:8000
+    environment:
+      # - DATABASE_URI=postgresql://postgres:noccmpbiki@contentdb:5432/contentdb
+      - DATABASE_HOSTNAME=content_db
+      - DATABASE_PORT=5432
+      - DATABASE_PASSWORD=noccmpbiki
+      - DATABASE_NAME=contentdb
+      - DATABASE_USERNAME=postgres
+
+  user_interaction_service:
+    build: ./user_interaction_service
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    volumes:
+      - ./user_interaction_service/:/app/
+    ports:
+      - 8003:8000
+
+    environment:
+      # - DATABASE_URI=postgresql://postgres:noccmpbiki@eventdb:5432/eventdb
+      - CONTENT_SERVICE_HOST_URL=http://content_service:8000/content
+      - USER_SERVICE_HOST_URL=http://user_service:8000/user
+      - DATABASE_HOSTNAME=event_db
+      - DATABASE_PORT=5432
+      - DATABASE_PASSWORD=noccmpbiki
+      - DATABASE_NAME=eventdb
+      - DATABASE_USERNAME=postgres
+
+  user_db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=noccmpbiki
+      - POSTGRES_DB=userdb
+    volumes:
+      - user_db:/var/lib/postgresql/data/
+
+  content_db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=noccmpbiki
+      - POSTGRES_DB=contentdb
+    volumes:
+      - content_db:/var/lib/postgresql/data/
+
+  event_db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=noccmpbiki
+      - POSTGRES_DB=eventdb
+    volumes:
+      - event_db:/var/lib/postgresql/data/
+
+volumes:
+  user_db: null
+  content_db: null
+  event_db: null
